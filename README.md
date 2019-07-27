@@ -10,3 +10,8 @@ devtools::install_github("hugogogo/sprintr", build_vignettes = TRUE)
 ```
 Note that the installation above requires using R package [devtools](https://cran.r-project.org/web/packages/devtools/index.html)
 (which can be installed using `install.packages("devtools")`).
+
+Please check the accompanying vignette on how to use the `sprintr` package. To read vignette, after installing the package, type in R console
+```R
+browseVignettes("sprintr")
+```
