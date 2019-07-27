@@ -5,7 +5,7 @@
 #' @param x An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.
 #' @param y A response vector of size \code{n}.
 #' @param num_keep Number of candidate interactions to keep in Step 2.
-#' @param square Indicator of whether squared effects should be fitted in Step 1. Deault to be NULL.
+#' @param square Indicator of whether squared effects should be fitted in Step 1. Default to be NULL.
 #' @param lambda A user specified list of tuning parameter. Default to be NULL, and the program will compute its own \code{lambda} path based on \code{nlam} and \code{lam_min_ratio}.
 #' @param nlam The number of \code{lambda} values. Default value is \code{100}.
 #' @param lam_min_ratio The ratio of the smallest and the largest values in \code{lambda}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.
