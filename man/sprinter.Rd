@@ -30,7 +30,7 @@ An object of S3 class "\code{sprinter}".
   \item{\code{a0}}{Estimate of intercept.}
   \item{\code{beta}}{Estimate of regression coefficients.}
   \item{\code{idx}}{Indices of all main effects and interactions in Step 3.}
-  \item{\code{fitted}}{Fitted response value. It is a \code{n}-by-\code{nlam} matrix, with each column represending a fitted response vector for a value of lambda.}
+  \item{\code{fitted}}{Fitted response value. It is a \code{n}-by-\code{nlam} matrix, with each column representing a fitted response vector for a value of lambda.}
   \item{\code{lambda}}{The sequence of \code{lambda} values used.}
   \item{\code{call}}{Function call.}
  }
