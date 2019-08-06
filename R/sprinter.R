@@ -1,11 +1,11 @@
 #' Sparse Reluctant Interaction Modeling
 #'
-#' This is the main function that fits interaction models with a path of tuning parameters.
+#' This is the main function that fits interaction models with a path of tuning parameters (for Step 3).
 #'
 #' @param x An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.
 #' @param y A response vector of size \code{n}.
-#' @param num_keep Number of candidate interactions to keep in Step 2.
-#' @param square Indicator of whether squared effects should be fitted in Step 1. Default to be NULL.
+#' @param num_keep Number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{[n / log n]}.
+#' @param square Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.
 #' @param lambda A user specified list of tuning parameter. Default to be NULL, and the program will compute its own \code{lambda} path based on \code{nlam} and \code{lam_min_ratio}.
 #' @param nlam The number of \code{lambda} values. Default value is \code{100}.
 #' @param lam_min_ratio The ratio of the smallest and the largest values in \code{lambda}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.
@@ -14,7 +14,7 @@
 #'   \item{\code{n}}{The sample size.}
 #'   \item{\code{p}}{The number of main effects.}
 #'   \item{\code{a0}}{Estimate of intercept.}
-#'   \item{\code{beta}}{Estimate of regression coefficients.}
+#'   \item{\code{coef}}{Estimate of regression coefficients.}
 #'   \item{\code{idx}}{Indices of all main effects and interactions in Step 3.}
 #'   \item{\code{fitted}}{Fitted response value. It is a \code{n}-by-\code{nlam} matrix, with each column representing a fitted response vector for a value of lambda.}
 #'   \item{\code{lambda}}{The sequence of \code{lambda} values used.}
@@ -120,19 +120,19 @@ sprinter <- function(x, y, num_keep = NULL, square = FALSE, lambda = NULL, nlam 
                         lambda = lambda,
                         intercept = FALSE,
                         standardize = FALSE)
-  beta <- fit$beta
+  coef <- fit$beta
   # drop the names of the matrix object returned by glmnet
-  fitted <- mean_y + design %*% beta
-  # fitted_main <- mean_y + design[, head(seq(ncol(design)), -num_keep)] %*% beta[head(seq(ncol(design)), -num_keep), ]
+  fitted <- mean_y + design %*% coef
+  # fitted_main <- mean_y + design[, head(seq(ncol(design)), -num_keep)] %*% coef[head(seq(ncol(design)), -num_keep), ]
   # scale estimates back to the original scale of x
-  beta <- beta / col_sd
-  a0 <- as.numeric(mean_y - crossprod(col_mean, as.matrix(beta)))
+  coef <- coef / col_sd
+  a0 <- as.numeric(mean_y - crossprod(col_mean, as.matrix(coef)))
   #cat("step 3 finished!", fill = TRUE)
 
   out <- list(n = n,
               p = p,
               a0 = a0,
-              beta = beta,
+              coef = coef,
               idx = idx,
               #fitted_first = fitted_first,
               #fitted_main = fitted_main,

@@ -16,7 +16,7 @@ predict_sprinter <- function(object, newdata, ...) {
   xm <- myscale(newdata)
   xint <- xm[, idxi[, 1]] * xm[, idxi[, 2]]
 
-  fitted <- as.matrix(cbind(newdata[, idxm], xint) %*% object$beta)
+  fitted <- as.matrix(cbind(newdata[, idxm], xint) %*% object$coef)
   colnames(fitted) <- NULL
   fitted <- t(object$a0 + t(fitted))
   return(fitted)

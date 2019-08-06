@@ -4,8 +4,8 @@
 #'
 #' @param x An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.
 #' @param y A response vector of size \code{n}.
-#' @param num_keep Number of candidate interactions to keep in Step 2.
-#' @param square Indicator of whether squared effects should be fitted in Step 1. Default to be NULL.
+#' @param num_keep Number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{[n / log n]}.
+#' @param square Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.
 #' @param lambda A user specified list of tuning parameter. Default to be NULL, and the program will compute its own \code{lambda} path based on \code{nlam} and \code{lam_min_ratio}.
 #' @param nlam The number of \code{lambda} values. Default value is \code{100}.
 #' @param lam_min_ratio The ratio of the smallest and the largest values in \code{lambda}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.
@@ -57,8 +57,8 @@ cv.sprinter <- function(x, y, num_keep = NULL, square = FALSE,
   fit <- sprinter(x = x, y = y, num_keep = num_keep, square = square, lambda = lambda, nlam = nlam, lam_min_ratio = lam_min_ratio)
 #  cat("cv initial finished!", fill = TRUE)
 
-  colnames(fit$beta) <- NULL
-  rownames(fit$beta) <- NULL
+  colnames(fit$coef) <- NULL
+  rownames(fit$coef) <- NULL
   if(is.null(lambda)){
     # if lambda is not provided
     lambda <- fit$lambda
@@ -73,7 +73,7 @@ cv.sprinter <- function(x, y, num_keep = NULL, square = FALSE,
     foldid <- sample(seq(nfold), size = n, replace = TRUE)
   }
 
-  # mse of lasso estimate of beta
+  # mse of lasso estimate of coef
   mat_mse <- matrix(NA, nrow = nlam, ncol = nfold)
   for (i in seq(nfold)){
     # train on all but i-th fold
@@ -105,8 +105,8 @@ cv.sprinter <- function(x, y, num_keep = NULL, square = FALSE,
   ibest <- which.min(cvm)
 
   idx <- fit$idx
-  beta <- fit$beta[, ibest]
-  compact <- cbind(idx[which(beta != 0), , drop = FALSE], beta[beta != 0])
+  coef <- fit$coef[, ibest]
+  compact <- cbind(idx[which(coef != 0), , drop = FALSE], coef[coef != 0])
   colnames(compact) <- c("index_1", "index_2", "coefficient")
 
   # finally return the best lambda
