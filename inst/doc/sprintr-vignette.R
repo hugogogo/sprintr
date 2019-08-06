@@ -19,7 +19,7 @@ mod <- sprinter(x = x, y = y, square = FALSE, nlam = 100, lam_min_ratio = 0.01)
 mod$idx[(p + 1) : nrow(mod$idx), ]
 
 ## ------------------------------------------------------------------------
-estimate <- mod$beta[, 30]
+estimate <- mod$coef[, 30]
 cb <- cbind(mod$idx, estimate)
 cb[cb[, 3] != 0, ]
 

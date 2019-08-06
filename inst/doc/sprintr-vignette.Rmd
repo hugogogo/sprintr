@@ -3,6 +3,7 @@ title: "Using the sprintr package"
 author: "Guo Yu"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+#output: pdf_document
 vignette: >
   %\VignetteIndexEntry{Using the sprintr package}
   %\VignetteEngine{knitr::rmarkdown}
@@ -56,9 +57,9 @@ mod$idx[(p + 1) : nrow(mod$idx), ]
 Since Step 3 of `sprinter` always includes the main effects, `mod$idx[(p + 1): nrow(mod$idx), ]` contains the indices of all the selected interactions from Step 2. The two columns of this output represents the index pair $(\ell, k)$ of a selected interaction $X_\ell * X_k$, where $\ell \leq k$.
 Note that here the last two rows are the true interactions $X_1 * X_3$ and $X_4 * X_5$. If the first entry of an index pair is zero, i.e., $(\ell = 0, k)$, then it represents a main effect $X_k$.
 
-The output `mod$beta` is a `nrow(mod$idx)`-by-`length(mod$lambda)` matrix. Each column of `mod$beta` is a vector of estimate of all variable coefficients considered in Step 3 corresponding to one value of the lasso tuning parameter `lambda`. For example,
+The output `mod$coef` is a `nrow(mod$idx)`-by-`length(mod$lambda)` matrix. Each column of `mod$coef` is a vector of estimate of all variable coefficients considered in Step 3 corresponding to one value of the lasso tuning parameter `lambda`. For example, for the 30-th tuning parameter, we have the corresponding coefficient estiamte:
 ```{r}
-estimate <- mod$beta[, 30]
+estimate <- mod$coef[, 30]
 cb <- cbind(mod$idx, estimate)
 cb[cb[, 3] != 0, ]
 ```
