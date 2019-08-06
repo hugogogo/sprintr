@@ -13,9 +13,9 @@ cv.sprinter(x, y, num_keep = NULL, square = FALSE, lambda = NULL,
 
 \item{y}{A response vector of size \code{n}.}
 
-\item{num_keep}{Number of candidate interactions to keep in Step 2.}
+\item{num_keep}{Number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{[n / log n]}.}
 
-\item{square}{Indicator of whether squared effects should be fitted in Step 1. Default to be NULL.}
+\item{square}{Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.}
 
 \item{lambda}{A user specified list of tuning parameter. Default to be NULL, and the program will compute its own \code{lambda} path based on \code{nlam} and \code{lam_min_ratio}.}
 

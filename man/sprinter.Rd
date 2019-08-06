@@ -12,9 +12,9 @@ sprinter(x, y, num_keep = NULL, square = FALSE, lambda = NULL,
 
 \item{y}{A response vector of size \code{n}.}
 
-\item{num_keep}{Number of candidate interactions to keep in Step 2.}
+\item{num_keep}{Number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{[n / log n]}.}
 
-\item{square}{Indicator of whether squared effects should be fitted in Step 1. Default to be NULL.}
+\item{square}{Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.}
 
 \item{lambda}{A user specified list of tuning parameter. Default to be NULL, and the program will compute its own \code{lambda} path based on \code{nlam} and \code{lam_min_ratio}.}
 
@@ -28,7 +28,7 @@ An object of S3 class "\code{sprinter}".
   \item{\code{n}}{The sample size.}
   \item{\code{p}}{The number of main effects.}
   \item{\code{a0}}{Estimate of intercept.}
-  \item{\code{beta}}{Estimate of regression coefficients.}
+  \item{\code{coef}}{Estimate of regression coefficients.}
   \item{\code{idx}}{Indices of all main effects and interactions in Step 3.}
   \item{\code{fitted}}{Fitted response value. It is a \code{n}-by-\code{nlam} matrix, with each column representing a fitted response vector for a value of lambda.}
   \item{\code{lambda}}{The sequence of \code{lambda} values used.}
@@ -36,7 +36,7 @@ An object of S3 class "\code{sprinter}".
  }
 }
 \description{
-This is the main function that fits interaction models with a path of tuning parameters.
+This is the main function that fits interaction models with a path of tuning parameters (for Step 3).
 }
 \examples{
 set.seed(123)
