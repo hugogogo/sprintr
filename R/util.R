@@ -9,7 +9,7 @@ myscale <- function(x, center = TRUE, scale = TRUE){
   sd_vec <- attr(x = x, which = "scaled:scale")
   ind <- which(sd_vec == 0)
   if(length(ind) > 0){
-    warning("Found columns with zero sd! Replaced with zeros!")
+    warning("Found columns with zero sd! Replaced this column with a column of all zeros!")
     submat <- matrix(0, nrow = n, ncol = length(ind))
     x[, ind] <- submat
     attr(x = x, which = "scaled:center")[ind] <- 0
@@ -22,8 +22,11 @@ get_lambda <- function(x, y,
                        nlam = 100,
                        lam_min_ratio = ifelse(nrow(x) < ncol(x),
                                               0.01, 1e-04)){
+  # get a path of tuning parameters
   n <- nrow(x)
   lam_max <- max(abs(crossprod(x, y))) / n
+  if(lam_max == 0)
+    stop('the calculated maximum of tuning parameter is 0! Please check your response and data matrix.')
   return(lam_max * exp(seq(0, log(lam_min_ratio), length = nlam)))
 }
 
