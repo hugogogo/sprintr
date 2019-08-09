@@ -15,4 +15,4 @@ Please check the accompanying vignette on how to use the `sprintr` package. To r
 ```R
 browseVignettes("sprintr")
 ```
-Or you can directly see the vignette in pdf format [here](https://github.com/hugogogo/sprintr/blob/master/inst/doc/sprintr-vignette.pdf).
+
