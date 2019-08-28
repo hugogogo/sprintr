@@ -16,3 +16,5 @@ Please check the accompanying vignette on how to use the `sprintr` package. To r
 browseVignettes("sprintr")
 ```
 
+The package is also [here](https://CRAN.R-project.org/package=sprintr) available in CRAN.
+You can directly see the vignette [here](https://cran.r-project.org/web/packages/sprintr/vignettes/sprintr-vignette.html).
