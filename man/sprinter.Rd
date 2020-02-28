@@ -4,34 +4,39 @@
 \alias{sprinter}
 \title{Sparse Reluctant Interaction Modeling}
 \usage{
-sprinter(x, y, num_keep = NULL, square = FALSE, lambda = NULL,
-  nlam = 100, lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04))
+sprinter(x, y, square = FALSE, type = 1, num_keep = NULL,
+  n_num_keep = 5, lambda = NULL, nlam = 100,
+  lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04), verbose = TRUE)
 }
 \arguments{
 \item{x}{An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.}
 
 \item{y}{A response vector of size \code{n}.}
 
-\item{num_keep}{Number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{[n / log n]}.}
-
 \item{square}{Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.}
 
-\item{lambda}{A user specified list of tuning parameter. Default to be NULL, and the program will compute its own \code{lambda} path based on \code{nlam} and \code{lam_min_ratio}.}
+\item{num_keep}{A user specified list of number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to a sequence from \code{[n / log n]} to 0, where the length of the sequence is set to the default value of \code{n_num_keep}.}
 
-\item{nlam}{The number of \code{lambda} values. Default value is \code{100}.}
+\item{n_num_keep}{The number of \code{num_keep} values. Default to be \code{5}.}
 
-\item{lam_min_ratio}{The ratio of the smallest and the largest values in \code{lambda}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.}
+\item{lambda}{A user specified list of tuning parameter. \code{lambda} is a list object of length \code{n_num_keep}, and an element \code{lambda[[i]]} is a vector of length \code{nlam}. Default to be NULL, and the program will compute its own \code{lambda} paths based on \code{n_num_keep}, \code{nlam} and \code{lam_min_ratio}.}
+
+\item{nlam}{the number of values in each \code{lambda[[i]]} path. If not specified, they will be all set to \code{100}.}
+
+\item{lam_min_ratio}{The ratio of the smallest and the largest values in each \code{lambda[[i]]}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.}
+
+\item{verbose}{If \code{TRUE} (default), a progress bar shows the progress of the fitting.}
 }
 \value{
 An object of S3 class "\code{sprinter}".
  \describe{
   \item{\code{n}}{The sample size.}
   \item{\code{p}}{The number of main effects.}
-  \item{\code{a0}}{Estimate of intercept.}
-  \item{\code{coef}}{Estimate of regression coefficients.}
-  \item{\code{idx}}{Indices of all main effects and interactions in Step 3.}
-  \item{\code{fitted}}{Fitted response value. It is a \code{n}-by-\code{nlam} matrix, with each column representing a fitted response vector for a value of lambda.}
-  \item{\code{lambda}}{The sequence of \code{lambda} values used.}
+  \item{\code{a0}}{Estimate of intercepts. It is a list of length \code{n_num_keep}, where \code{a0[i][j]} is the estimate of intercept in the model with \code{num_keep[i]} interactions considered in Step 3 and the lasso tuning parameter lambda value is set to \code{lambda[[i]][j]}.}
+  \item{\code{coef}}{Estimate of regression coefficients. It is a list of length \code{n_num_keep}, where \code{coef[[i]]} is a matrix with \code{nlam} columns. A column \code{coef[[i]][, j]} represents the estimate of regression coefficients with \code{num_keep[i]} interactions in Step 3, and the lasso tuning parameter lambda value is set to \code{lambda[[i]][j]}. }
+  \item{\code{idx}}{Indices of all main effects and interactions considered in Step 3.}
+  \item{\code{fitted}}{Fitted response value. It is a list of length \code{n_num_keep}, where \code{fitted[[i]]} is a matrix of size \code{n}-by-\code{nlam}. A column \code{pred[[i]][, j]} represents the in-sample prediction of the fit with \code{num_keep[i]} interactions in Step 3, and the lasso tuning parameter lambda value is set to \code{lambda[[i]][j]}. }
+  \item{\code{lambda}}{The sequences of \code{lambda} values used. It is a list of \code{n_num_keep} vectors. Each component \code{lambda[[i]]} is a vector of length \code{nlam} of lambda values considered in Step 3 with \code{num_keep[i]} interactions. }
   \item{\code{call}}{Function call.}
  }
 }
@@ -41,8 +46,16 @@ This is the main function that fits interaction models with a path of tuning par
 \examples{
 set.seed(123)
 n <- 100
-p <- 200
+p <- 100
+# dense input
 x <- matrix(rnorm(n * p), n, p)
+y <- x[, 1] - 2 * x[, 2] + 3 * x[, 1] * x[, 3] - 4 * x[, 4] * x[, 5] + rnorm(n)
+mod <- sprinter(x = x, y = y)
+
+# sparse input
+x <- Matrix(0, n, p)
+idx <- cbind(sample(seq(n), size = 10, replace = TRUE), sample(seq(p), size = 10, replace = TRUE))
+x[idx] <- 1
 y <- x[, 1] - 2 * x[, 2] + 3 * x[, 1] * x[, 3] - 4 * x[, 4] * x[, 5] + rnorm(n)
 mod <- sprinter(x = x, y = y)
 
