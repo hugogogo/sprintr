@@ -21,9 +21,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// screen_sparse_cpp
+arma::mat screen_sparse_cpp(const arma::sp_mat& x, const arma::vec& y, const int num_keep, const bool square, const bool main_effect);
+RcppExport SEXP _sprintr_screen_sparse_cpp(SEXP xSEXP, SEXP ySEXP, SEXP num_keepSEXP, SEXP squareSEXP, SEXP main_effectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const int >::type num_keep(num_keepSEXP);
+    Rcpp::traits::input_parameter< const bool >::type square(squareSEXP);
+    Rcpp::traits::input_parameter< const bool >::type main_effect(main_effectSEXP);
+    rcpp_result_gen = Rcpp::wrap(screen_sparse_cpp(x, y, num_keep, square, main_effect));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_sprintr_screen_cpp", (DL_FUNC) &_sprintr_screen_cpp, 5},
+    {"_sprintr_screen_sparse_cpp", (DL_FUNC) &_sprintr_screen_sparse_cpp, 5},
     {NULL, NULL, 0}
 };
 
