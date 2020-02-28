@@ -25,59 +25,101 @@ $$
 This document serves as an introduction of using the package with a simple simulated data example.
 
 ## Data simulation
-We consider the following simple simulation setting, where $X \sim N(\mathbf{0}, \mathbf{I}_p)$. There are two non-trivial main effects $\beta_1 = 1$, $\beta_2 = -2$, and $\beta_j = 0$ for $j > 2$. The two important interactions are $X_1 * X_3$ with $\gamma_{13} = 3$, and $X_4 * X_5$ with $\gamma_{45} = -4$. With $\varepsilon \sim N(0, 1)$, the following code simulates $n = 100$ observation from the model above with $p = 200$.
+We consider the following simple simulation setting, where $X \sim N(\mathbf{0}, \mathbf{I}_p)$. There are two non-trivial main effects $\beta_1 = 1$, $\beta_2 = -2$, and $\beta_j = 0$ for $j > 2$. The two important interactions are $X_1 * X_3$ with $\gamma_{13} = 3$, and $X_4 * X_5$ with $\gamma_{45} = -4$. With $\varepsilon \sim N(0, 1)$, the following code simulates $n = 100$ observation from the model above with $p = 100$.
 ```{r}
 library(sprintr)
 set.seed(123)
 n <- 100
-p <- 200
+p <- 100
 x <- matrix(data = rnorm(n * p), nrow = n, ncol = p)
 y <- x[, 1] - 2 * x[, 2] + 3 * x[, 1] * x[, 3] - 4 * x[, 4] * x[, 5] + rnorm(100)
 ```
 
 
-## Using `sprinter` function
+# Using `sprinter` function
 The function `sprinter` implements the sprinter method (please note that the function name `sprinter` is different from the package name `sprintr`), which involves the following three main steps:
 
-- Fit a lasso (with cross-validation) of the response $y$ only on main effects $X$ (if `square = FALSE`) or with both main effects and squared effects $(X, X^2)$ (if `square = TRUE`).
-- Carry out a screening procedure based on the residual from the previous step. The number of the selected candidate interactions is specified by `num_keep` .
+- Fit a lasso (with cross-validation) of the response $y$ only on main effects $X$ (if `square = FALSE` by default) or with both main effects and squared effects $(X, X^2)$ (if `square = TRUE`).
+- Carry out a screening procedure based on the residual from the previous step. The number of the selected candidate interactions can be specified by a path of `num_keep` values.
 - With a path of tuning parameter `lambda`, fit a lasso of the response on main effects, squared effects (if `square = TRUE`), and selected interactions from the previous step. 
 
-
-There are two tuning parameters: `num_keep` (used in Step 2) and `lambda` (used in Step 3). If `num_keep` is not specified, it will then be set to $n / \lceil \log n \rceil$ (see, e.g., [Fan & Lv (2008)](https://orfe.princeton.edu/~jqfan/papers/06/SIS.pdf)). 
+There are two tuning parameters: `num_keep` (used in Step 2) and `lambda` (used in Step 3). If `num_keep` is not specified, it will then be automatically compuated as a list of decreasing values, starting from $n / \lceil \log n \rceil$ (see, e.g., [Fan & Lv (2008)](https://orfe.princeton.edu/~jqfan/papers/06/SIS.pdf)), based on the number of tuning parameters (`n_num_keep`, default to be 5). 
 If `lambda` is not specified, then `sprinter` would compute its own path of tuning parameter values based on the number of tuning parameters (`nlam`) and the range of the path (`lam_min_ratio`).
+Finally, a `verbose` option (default to be `TRUE`) can be turned on to see the progress of the computation.
 ```{r}
-mod <- sprinter(x = x, y = y, square = FALSE, nlam = 100, lam_min_ratio = 0.01)
+fit <- sprinter(x = x, y = y, square = FALSE, nlam = 100, lam_min_ratio = 0.01)
 ```
 
-The output of `sprinter` is a `S3` object including several useful components. In particular, it involves a matrix `idx` that represents the index pairs of all variables considered in Step 3:
-```{r}
-mod$idx[(p + 1) : nrow(mod$idx), ]
-```
-Since Step 3 of `sprinter` always includes the main effects, `mod$idx[(p + 1): nrow(mod$idx), ]` contains the indices of all the selected interactions from Step 2. The two columns of this output represents the index pair $(\ell, k)$ of a selected interaction $X_\ell * X_k$, where $\ell \leq k$.
-Note that here the last two rows are the true interactions $X_1 * X_3$ and $X_4 * X_5$. If the first entry of an index pair is zero, i.e., $(\ell = 0, k)$, then it represents a main effect $X_k$.
+## `sprinter` output
+The output of `sprinter` is a `S3` object including several useful components. In particular, the component `step3` is a list of length `n_num_keep`, with `step3[j]` containing information from Step 3 fit when the tuning parameter in Step 2 is `num_keep[j]`.
 
-The output `mod$coef` is a `nrow(mod$idx)`-by-`length(mod$lambda)` matrix. Each column of `mod$coef` is a vector of estimate of all variable coefficients considered in Step 3 corresponding to one value of the lasso tuning parameter `lambda`. For example, for the 30-th tuning parameter, we have the corresponding coefficient estiamte:
+Within each `step3` component, there exists a `idx` object representing all variables considered in Step 3:
 ```{r}
-estimate <- mod$coef[, 30]
-cb <- cbind(mod$idx, estimate)
+fit1 <- fit$step3[[1]]
+fit1$idx[(p + 1) : nrow(fit1$idx), ]
+```
+In particular, `fit1$idx[, 1:2]` contains the indices of all the variables indices, and the last column represents their corresponding scores used to select candidate interactions in Step 2. The two columns of `idx` represents the index pair $(\ell, k)$ of a selected interaction $X_\ell * X_k$, where $\ell \leq k$.
+If the first entry of an index pair is zero, i.e., $(\ell = 0, k)$, then it represents a main effect $X_k$ (with zero score).
+
+The output `fit1$coef` is a `nrow(fit1$idx)`-by-`length(fit1$lambda)` matrix. Each column of `fit1$coef` is a vector of estimates of all variable coefficients considered in Step 3 corresponding to one value of the lasso tuning parameter `lambda`. For example, for the 30-th tuning parameter, we have the corresponding coefficient estiamte:
+```{r}
+estimate <- fit1$coef[, 30]
+cb <- cbind(fit1$idx, estimate)
 cb[cb[, 3] != 0, ]
 ```
 
-## Using cross-validation with `cv.sprinter`
-The function `cv.sprinter()` performs cross-validation to select the value of lasso tuning parameter `lambda` used in Step 3, while holding the value of `num_keep` fixed.
+## Summarizing `sprinter` output by `print`, `plot`, and `summary`
+The output of `sprinter` has an associated `print` function, that prints information (the number of nonzero main effects and nonzero interactions) of Step 3 fits along a path of Step 3 tuning parameters, for a given value of Step 2 tuning parameter (specified by `which`). For example, the following codes prints the output when the 2nd value of Step-2 tuning parameter is used:
 ```{r}
-mod_cv <- cv.sprinter(x = x, y = y, square = FALSE, nlam = 100, lam_min_ratio = 0.01)
+print(fit, which = 2)
 ```
-The output of `cv.sprinter` is a `S3` object. The most intersting information is `mod_cv$compact`, which is a matrix of three columns.
-The first two columns show the index pairs of all variables finally selected by the lasso in Step 3, and the last column is the coefficient estimate corresponding to that selected variable.
-```{r}
-mod_cv$compact
+The `plot` function is also defined for `sprinter` output to look at the effects from a certain interaction (specified by `which`). For example, by examining the effect of interaction between $X_4$ and $X_5$, we run the following `plot` function that produces 4 panels:
+```{r fig.width = 7}
+plot(fit, newdata = x, which = c(4, 5))
 ```
-We see (from the first two rows and the last two rows) that the fit selected by cross-validation includes all the four important variables in the model, with relatively accurate estimates of their coefficients.
+The top two panels show the marginal relationship of the predicted response on the two main effects, i.e., $\hat{\beta}_4 X_4$ and $\hat{\beta}_5 X_5$ respectively. The lower-left panel shows the dependence of the predicted response on the interaction alone, i.e., $\hat{\gamma}_{45} X_4 * X_5$, and the lower-right panel shows $\hat{\beta}_4 X_4 + \hat{\beta}_5 X_5 + \hat{\gamma}_{45} X_4 * X_5$. From the plot we see that the predicted response does not depend on either of the two main effects, but depends on their interaction (with coefficient -0.78)
 
-Finally, there is a `predict` function for the `S3` object returned by `cv.sprinter` that computes the prediction for a new data matrix of main effects:
+Finally, `summary` function shows the dependence of coefficient estimates for each main effects (left panel) and interactions(right panel) on the Step-3 tuning parameters:
+```{r fig.width = 7}
+summary(fit)
+```
+
+# Using cross-validation with `cv.sprinter`
+The function `cv.sprinter()` performs cross-validation to select the best value pairs of Step-2 and Step-3 tuning parameters.
+```{r }
+fit_cv <- cv.sprinter(x = x, y = y, square = FALSE, n_num_keep = 5, nlam = 100, lam_min_ratio = 0.01)
+```
+
+## `cv.sprinter` output
+The output of `cv.sprinter` is a `S3` object. The most intersting information is `fit_cv$compact`, which is a matrix of three columns.
+The first two columns show the indices pairs of all variables finally selected by cross-validation, and the last column is the coefficient estimate corresponding to those selected variables.
+```{r}
+fit_cv$compact
+```
+We see (from the first two rows and the last two rows) that the fit selected by cross-validation includes all the four important variables ($X_1, X_2, X_4*X_5, X_1 * X_3$) in the model, with relatively accurate estimates of their coefficients.
+
+## Summarizing `cv.sprinter` output by `print` and `plot`
+Associated with the output of `cv.sprinter` are the `print` and `plot` functions. `print` functions can be used to the summary of the cross-validation process, indicating information such as the best number of candidate interactions in Step 2, and the validation error mean/standard errors, number of non-zero main effects/interactions for the Step-3 tuning parameter selected by `min` rule and `1se` rule.
+```{r}
+print(fit_cv)
+```
+
+The `plot` function for the output of `cv.sprinter` shows the validation error across different folds as a function of Step-3 tuning parameters (for a fixed value of Step-2 tuning parameter chosen by cross-validation). The top of the plot shows the number of nonzero main effects / nonzero interactions corresponding (in orange) to a value of Step-3 tuning parameters.
+```{r fig.width=7}
+plot(fit_cv)
+```
+The blue vertical line shows the Step-3 tuning parameter selected by `min` rule, and the green vertical line shows the Step-3 tuning parameter selected by `1se` rule.
+
+# Prediction
+The `predict` function is defined for both the object returned by `sprinter` and `cv.sprinter` that computes the prediction for a new data matrix of main effects:
 ```{r}
 newdata <- matrix(rnorm(20 * p), nrow = 20, ncol = p)
-pred <- predict(mod_cv, newdata = newdata)
+pred <- predict(fit, newdata = newdata)
 ```
+The prediction for `sprinter` object computes the prediction at `newdata` for all the (Step-2, Step-3) tuning parameter pairs, and the prediction for `cv.sprinter` object just computes the prediction at `newdata` for the best tuning parameter pairs selected by cross-validation.
+```{r}
+pred_cv <- predict(fit_cv, newdata = newdata)
+```
+
+# Support for other response families
+Under construction
