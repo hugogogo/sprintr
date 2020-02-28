@@ -1,19 +1,27 @@
 myscale <- function(x, center = TRUE, scale = TRUE){
   # My own scale function
-  # Treat specifically the case where columns have zero sds
-  n <- nrow(x)
-  x <- scale(x, center = center, scale = scale)
-  # for those columns with 0 sds
-  # add small Gaussian noise to it
-  mean_vec <- attr(x = x, which = "scaled:center")
-  sd_vec <- attr(x = x, which = "scaled:scale")
-  ind <- which(sd_vec == 0)
-  if(length(ind) > 0){
-    warning("Found columns with zero sd! Replaced this column with a column of all zeros!")
-    submat <- matrix(0, nrow = n, ncol = length(ind))
-    x[, ind] <- submat
-    attr(x = x, which = "scaled:center")[ind] <- 0
-    attr(x = x, which = "scaled:scale")[ind] <- 1
+  # Treat specifically the case where columns have zero sds and sparse matrices
+  if(inherits(x, "sparseMatrix")){
+    mean_vec <- rep(0, ncol(x))
+    sd_vec <- rep(1, ncol(x))
+    attr(x = x, which = "scaled:center") <- mean_vec
+    attr(x = x, which = "scaled:scale") <- sd_vec
+  }
+  else{
+    n <- nrow(x)
+    x <- scale(x, center = center, scale = scale)
+    # for those columns with 0 sds
+    # add small Gaussian noise to it
+    mean_vec <- attr(x = x, which = "scaled:center")
+    sd_vec <- attr(x = x, which = "scaled:scale")
+    ind <- which(sd_vec == 0)
+    if(length(ind) > 0){
+      warning("Found columns with zero sd! Replaced this column with a column of all zeros!")
+      submat <- matrix(0, nrow = n, ncol = length(ind))
+      x[, ind] <- submat
+      attr(x = x, which = "scaled:center")[ind] <- 0
+      attr(x = x, which = "scaled:scale")[ind] <- 1
+    }
   }
   return(x)
 }
@@ -24,7 +32,8 @@ get_lambda <- function(x, y,
                                               0.01, 1e-04)){
   # get a path of tuning parameters
   n <- nrow(x)
-  lam_max <- max(abs(crossprod(x, y))) / n
+  lam_max <- max(abs(Matrix::crossprod(x, y))) / n
+
   if(lam_max == 0)
     stop('the calculated maximum of tuning parameter is 0! Please check your response and data matrix.')
   return(lam_max * exp(seq(0, log(lam_min_ratio), length = nlam)))
