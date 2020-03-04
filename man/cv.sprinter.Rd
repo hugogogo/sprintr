@@ -16,6 +16,8 @@ cv.sprinter(x, y, square = FALSE, type = 1, num_keep = NULL,
 
 \item{square}{Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.}
 
+\item{type}{An indicator: if type == 1, in Step 3 we fit y on (main effects, selected interactions); if type == 2, in Step 3 we fit the residual from step 1 on only the selected interactions}
+
 \item{num_keep}{Number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{[n / log n]}.}
 
 \item{n_num_keep}{The number of \code{num_keep} values. Default to be \code{5}.}
@@ -37,6 +39,9 @@ An object of S3 class "\code{sprinter}".
  \describe{
   \item{\code{n}}{The sample size.}
   \item{\code{p}}{The number of main effects.}
+  \item{\code{type}}{The \code{type} parameter passed into sprinter}
+  \item{\code{square}}{The \code{square} parameter passed into sprinter}
+  \item{\code{step1}}{The output from fitting Step 1}
   \item{\code{a0}}{estimate of intercept corresponding to the CV-selected model.}
   \item{\code{compact}}{A compact representation of the selected variables. \code{compact} has three columns, with the first two columns representing the indices of a selected variable (main effects with first index = 0), and the last column representing the estimate of coefficients.}
   \item{\code{fit}}{The whole \code{glmnet} fit object in Step 3.}
@@ -45,7 +50,9 @@ An object of S3 class "\code{sprinter}".
   \item{\code{cvm}}{The averaged estimated prediction error on the test sets over K folds.}
   \item{\code{cvse}}{The standard error of the estimated prediction error on the test sets over K folds.}
   \item{\code{foldid}}{Fold assignment. A vector of length \code{n}.}
-  \item{\code{ibest}}{The index in \code{lambda} that is chosen by CV.}
+  \item{\code{num_keep_best}}{The index in \code{num_keep} that is chosen by CV.}
+  \item{\code{lam_best}}{The index in \code{lambda} that is chosen by CV by minimizing cvm.}
+  \item{\code{lam_1se}}{The index in \code{lambda} that is chosen by CV using 1se rule.}
   \item{\code{call}}{Function call.}
  }
 }

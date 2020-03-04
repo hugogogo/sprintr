@@ -15,6 +15,8 @@ sprinter(x, y, square = FALSE, type = 1, num_keep = NULL,
 
 \item{square}{Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.}
 
+\item{type}{An indicator: if type == 1, in Step 3 we fit y on (main effects, selected interactions); if type == 2, in Step 3 we fit the residual from step 1 on only the selected interactions}
+
 \item{num_keep}{A user specified list of number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to a sequence from \code{[n / log n]} to 0, where the length of the sequence is set to the default value of \code{n_num_keep}.}
 
 \item{n_num_keep}{The number of \code{num_keep} values. Default to be \code{5}.}
@@ -30,13 +32,14 @@ sprinter(x, y, square = FALSE, type = 1, num_keep = NULL,
 \value{
 An object of S3 class "\code{sprinter}".
  \describe{
+  \item{\code{type}}{The \code{type} parameter passed into sprinter}
+  \item{\code{square}}{The \code{square} parameter passed into sprinter}
+  \item{\code{step1}}{The output from fitting Step 1}
+  \item{\code{lambda}}{The path of tuning parameters passed into / computed for fitting Step 3}
+  \item{\code{num_keep}}{The path of tuning parameters for Step 2}
   \item{\code{n}}{The sample size.}
   \item{\code{p}}{The number of main effects.}
-  \item{\code{a0}}{Estimate of intercepts. It is a list of length \code{n_num_keep}, where \code{a0[i][j]} is the estimate of intercept in the model with \code{num_keep[i]} interactions considered in Step 3 and the lasso tuning parameter lambda value is set to \code{lambda[[i]][j]}.}
-  \item{\code{coef}}{Estimate of regression coefficients. It is a list of length \code{n_num_keep}, where \code{coef[[i]]} is a matrix with \code{nlam} columns. A column \code{coef[[i]][, j]} represents the estimate of regression coefficients with \code{num_keep[i]} interactions in Step 3, and the lasso tuning parameter lambda value is set to \code{lambda[[i]][j]}. }
-  \item{\code{idx}}{Indices of all main effects and interactions considered in Step 3.}
-  \item{\code{fitted}}{Fitted response value. It is a list of length \code{n_num_keep}, where \code{fitted[[i]]} is a matrix of size \code{n}-by-\code{nlam}. A column \code{pred[[i]][, j]} represents the in-sample prediction of the fit with \code{num_keep[i]} interactions in Step 3, and the lasso tuning parameter lambda value is set to \code{lambda[[i]][j]}. }
-  \item{\code{lambda}}{The sequences of \code{lambda} values used. It is a list of \code{n_num_keep} vectors. Each component \code{lambda[[i]]} is a vector of length \code{nlam} of lambda values considered in Step 3 with \code{num_keep[i]} interactions. }
+  \item{\code{step3}}{The output from fitting Step 3}
   \item{\code{call}}{Function call.}
  }
 }
@@ -53,7 +56,8 @@ y <- x[, 1] - 2 * x[, 2] + 3 * x[, 1] * x[, 3] - 4 * x[, 4] * x[, 5] + rnorm(n)
 mod <- sprinter(x = x, y = y)
 
 # sparse input
-x <- Matrix(0, n, p)
+library(Matrix)
+x <- Matrix::Matrix(0, n, p)
 idx <- cbind(sample(seq(n), size = 10, replace = TRUE), sample(seq(p), size = 10, replace = TRUE))
 x[idx] <- 1
 y <- x[, 1] - 2 * x[, 2] + 3 * x[, 1] * x[, 3] - 4 * x[, 4] * x[, 5] + rnorm(n)
