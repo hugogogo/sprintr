@@ -51,7 +51,7 @@ fit <- sprinter(x = x, y = y, square = FALSE, nlam = 100, lam_min_ratio = 0.01)
 ```
 
 ## `sprinter` output
-The output of `sprinter` is a `S3` object including several useful components. In particular, the component `step3` is a list of length `n_num_keep`, with `step3[j]` containing information from Step 3 fit when the tuning parameter in Step 2 is `num_keep[j]`.
+The output of `sprinter` is a `S3` object including several useful components. In particular, the component `step3` is a list of length `n_num_keep`, with `step3[[j]]` containing information from Step 3 fit when the tuning parameter in Step 2 is `num_keep[j]`.
 
 Within each `step3` component, there exists a `idx` object representing all variables considered in Step 3:
 ```{r}
@@ -75,9 +75,9 @@ print(fit, which = 2)
 ```
 The `plot` function is also defined for `sprinter` output to look at the effects from a certain interaction (specified by `which`). For example, by examining the effect of interaction between $X_4$ and $X_5$, we run the following `plot` function that produces 4 panels:
 ```{r fig.width = 7}
-plot(fit, newdata = x, which = c(4, 5))
+plot(fit, newdata = x, index = c(1, 40), which = c(4, 5))
 ```
-The top two panels show the marginal relationship of the predicted response on the two main effects, i.e., $\hat{\beta}_4 X_4$ and $\hat{\beta}_5 X_5$ respectively. The lower-left panel shows the dependence of the predicted response on the interaction alone, i.e., $\hat{\gamma}_{45} X_4 * X_5$, and the lower-right panel shows $\hat{\beta}_4 X_4 + \hat{\beta}_5 X_5 + \hat{\gamma}_{45} X_4 * X_5$. From the plot we see that the predicted response does not depend on either of the two main effects, but depends on their interaction (with coefficient -0.78)
+The top two panels show the marginal relationship of the predicted response on the two main effects, i.e., $\hat{\beta}_4 X_4$ and $\hat{\beta}_5 X_5$ respectively. The lower-left panel shows the dependence of the predicted response on the interaction alone, i.e., $\hat{\gamma}_{45} X_4 * X_5$, and the lower-right panel shows $\hat{\beta}_4 X_4 + \hat{\beta}_5 X_5 + \hat{\gamma}_{45} X_4 * X_5$. From the plot we see that the predicted response does not depend on either of the two main effects, but depends on their interaction (with coefficient -3.56)
 
 Finally, `summary` function shows the dependence of coefficient estimates for each main effects (left panel) and interactions(right panel) on the Step-3 tuning parameters:
 ```{r fig.width = 7}
@@ -91,7 +91,7 @@ fit_cv <- cv.sprinter(x = x, y = y, square = FALSE, n_num_keep = 5, nlam = 100, 
 ```
 
 ## `cv.sprinter` output
-The output of `cv.sprinter` is a `S3` object. The most intersting information is `fit_cv$compact`, which is a matrix of three columns.
+The output of `cv.sprinter` is a `S3` object. The most interesting information is `fit_cv$compact`, which is a matrix of three columns.
 The first two columns show the indices pairs of all variables finally selected by cross-validation, and the last column is the coefficient estimate corresponding to those selected variables.
 ```{r}
 fit_cv$compact
