@@ -213,7 +213,8 @@ sprinter <- function(x, y, square = FALSE, type = 1,
       utils::setTxtProgressBar(pb, 2 + i)
   }
 
-  cat("\n")
+  if (verbose)
+    cat("\n")
   result <- list(type = type, square = square, step1 = step1, lambda = lambda, num_keep = num_keep, n = n, p = p, step3 = out, call = match.call())
   class(result) <- "sprinter"
   return(result)
