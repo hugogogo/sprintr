@@ -11,7 +11,7 @@
 #' @param lambda A user specified list of tuning parameter. \code{lambda} is a list object of length \code{n_num_keep}, and an element \code{lambda[[i]]} is a vector of length \code{nlam}. Default to be NULL, and the program will compute its own \code{lambda} paths based on \code{n_num_keep}, \code{nlam} and \code{lam_min_ratio}.
 #' @param nlam the number of values in each \code{lambda[[i]]} path. If not specified, they will be all set to \code{100}.
 #' @param lam_min_ratio The ratio of the smallest and the largest values in each \code{lambda[[i]]}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.
-#' @param verbose If \code{TRUE} (default), a progress bar shows the progress of the fitting.
+#' @param verbose If \code{TRUE}, a progress bar shows the progress of the fitting.
 #'
 #' @return An object of S3 class "\code{sprinter}".
 #'  \describe{
@@ -50,7 +50,7 @@ sprinter <- function(x, y, square = FALSE, type = 1,
                      num_keep = NULL, n_num_keep = 5,
                      lambda = NULL, nlam = 100,
                      lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
-                     verbose = TRUE){
+                     verbose = FALSE){
   n <- nrow(x)
   p <- ncol(x)
 
