@@ -14,6 +14,7 @@
 #' @param lam_min_ratio The ratio of the smallest and the largest values in each \code{lambda[[i]]}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.
 #' @param nfold Number of folds in cross-validation. Default value is 5. If each fold gets too view observation, a warning is thrown and the minimal \code{nfold = 3} is used.
 #' @param foldid A vector of length \code{n} representing which fold each observation belongs to. Default to be \code{NULL}, and the program will generate its own randomly.
+#' @param verbose If \code{TRUE}, a progress bar shows the progress of the fitting.
 #' @return An object of S3 class "\code{sprinter}".
 #'  \describe{
 #'   \item{\code{n}}{The sample size.}
@@ -49,7 +50,7 @@ cv.sprinter <- function(x, y, square = FALSE, type = 1,
                         num_keep = NULL, n_num_keep = 5,
                         lambda = NULL, nlam = 100,
                         lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
-                        nfold = 5, foldid = NULL){
+                        nfold = 5, foldid = NULL, verbose = FALSE){
   n <- nrow(x)
   p <- ncol(x)
   stopifnot(n == length(y))
@@ -63,7 +64,8 @@ cv.sprinter <- function(x, y, square = FALSE, type = 1,
   }
   n_num_keep <- length(num_keep)
 
-  cat("cv initial:", fill = TRUE)
+  if(verbose)
+    cat("cv initial:", fill = TRUE)
   # first fit the sprinter using all data with all lambdas
   fit <- sprinter(x = x, y = y, square = square, type = type,
                   num_keep = num_keep, n_num_keep = n_num_keep,
@@ -87,7 +89,8 @@ cv.sprinter <- function(x, y, square = FALSE, type = 1,
   err <- vector("list", nfold)
   err_mat <- matrix(0, nrow = n_num_keep, ncol = nlam)
   for (i in seq(nfold)){
-    cat(paste("cv fold ", i, ":"), fill = TRUE)
+    if(verbose)
+      cat(paste("cv fold ", i, ":"), fill = TRUE)
     # train on all but i-th fold
     id_tr <- (foldid != i)
     id_te <- (foldid == i)
@@ -106,7 +109,7 @@ cv.sprinter <- function(x, y, square = FALSE, type = 1,
     fit_tr <- sprinter(x = x_tr, y = y_tr,
                        square = square, type = type,
                        num_keep = fit$num_keep,
-                       lambda = fit$lambda)
+                       lambda = fit$lambda, verbose = verbose)
     err[[i]] <- matrix(NA, nrow = n_num_keep, ncol = nlam)
     pred_te <- predict.sprinter(object = fit_tr, newdata = x_te)
     for(k in seq(length(fit_tr$step3))){
