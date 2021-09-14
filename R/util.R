@@ -1,7 +1,11 @@
+#' @export
 myscale <- function(x, center = TRUE, scale = TRUE){
-  # My own scale function
   # Treat specifically the case where columns have zero sds and sparse matrices
+  # or when the matrix is binary
+  # flag_bin <- sum(as.vector(x) != as.numeric(as.logical(x))) == 0
+  # if(inherits(x, "sparseMatrix") | flag_bin){
   if(inherits(x, "sparseMatrix")){
+    # if x is either sparse or binary
     mean_vec <- rep(0, ncol(x))
     sd_vec <- rep(1, ncol(x))
     attr(x = x, which = "scaled:center") <- mean_vec
@@ -26,6 +30,7 @@ myscale <- function(x, center = TRUE, scale = TRUE){
   return(x)
 }
 
+#' @export
 get_lambda <- function(x, y,
                        nlam = 100,
                        lam_min_ratio = ifelse(nrow(x) < ncol(x),
@@ -39,6 +44,7 @@ get_lambda <- function(x, y,
   return(lam_max * exp(seq(0, log(lam_min_ratio), length = nlam)))
 }
 
+#' @export
 extract_inter_indices <- function(iT, p){
   # iT is a n-by-2 matrix, i.e., t(combn(p, 2))
   # Extract position of 2nd-order terms

@@ -4,8 +4,14 @@
 \alias{sis_lasso}
 \title{Sure independence screening followed by lasso}
 \usage{
-sis_lasso(x, y, num_keep = NULL, lam_min_ratio = ifelse(nrow(x) < ncol(x),
-  0.01, 1e-04), nfold = 5, foldid = NULL)
+sis_lasso(
+  x,
+  y,
+  num_keep = NULL,
+  lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
+  nfold = 5,
+  foldid = NULL
+)
 }
 \arguments{
 \item{x}{An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.}

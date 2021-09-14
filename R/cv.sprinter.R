@@ -4,14 +4,14 @@
 #'
 #' @param x An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.
 #' @param y A response vector of size \code{n}.
-#' @param num_keep Number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{[n / log n]}.
 #' @param square Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.
-#' @param type An indicator: if type == 1, in Step 3 we fit y on (main effects, selected interactions); if type == 2, in Step 3 we fit the residual from step 1 on only the selected interactions
-#' @param num_keep A user specified list of number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to a sequence from \code{[n / log n]} to 0, where the length of the sequence is set to the default value of \code{n_num_keep}.
-#' @param n_num_keep The number of \code{num_keep} values. Default to be \code{5}.
-#' @param lambda A user specified list of tuning parameter. \code{lambda} is a list object of length \code{n_num_keep}, and an element \code{lambda[[i]]} is a vector of length \code{nlam[i]}. Default to be NULL, and the program will compute its own \code{lambda} paths based on \code{n_num_keep}, \code{nlam} and \code{lam_min_ratio}.
-#' @param nlam A vector of length \code{n_num_keep}, where \code{nlam[i]} is the number of values in \code{lambda[[i]]}. If not specified, they will be all set to \code{100}.
-#' @param lam_min_ratio The ratio of the smallest and the largest values in each \code{lambda[[i]]}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.
+#' @param num_keep A user specified number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{round[n / log n]}.
+#' @param lambda1 Tuning parameter values for Step 1. \code{lambda1} is a vector. Default to be NULL, and the program will compute its own \code{lambda1} based on \code{nlam1} and \code{lam_min_ratio}.
+#' @param lambda3 Tuning parameter values for Step 3. \code{lambda3} is a matrix, where the k-th column is the list of tuning parameter in Step 3 corresponding to Step 1 using \code{lambda1[k]}. Default to be NULL, and the program will compute its own \code{lambda3} based on \code{nlam3} and \code{lam_min_ratio}.
+#' @param cv_step1 Indicator of whether cross-validation of \code{lambda1} should be carried out in Step 1 before subsequent steps. Default is \code{FALSE}.
+#' @param nlam1 the number of values in \code{lambda1}. If not specified, they will be all set to \code{10}.
+#' @param nlam3 the number of values in each column of \code{lambda3}. If not specified, they will be all set to \code{100}.
+#' @param lam_min_ratio The ratio of the smallest and the largest values in \code{lambda1} and each column of \code{lambda2}. The largest value is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.
 #' @param nfold Number of folds in cross-validation. Default value is 5. If each fold gets too view observation, a warning is thrown and the minimal \code{nfold = 3} is used.
 #' @param foldid A vector of length \code{n} representing which fold each observation belongs to. Default to be \code{NULL}, and the program will generate its own randomly.
 #' @param verbose If \code{TRUE}, a progress bar shows the progress of the fitting.
@@ -46,36 +46,34 @@
 #'
 #' @import glmnet
 #' @export
-cv.sprinter <- function(x, y, square = FALSE, type = 1,
-                        num_keep = NULL, n_num_keep = 5,
-                        lambda = NULL, nlam = 100,
-                        lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
-                        nfold = 5, foldid = NULL, verbose = FALSE){
+cv.sprinter <- function(x, y, square = FALSE, num_keep = NULL,
+                      lambda1 = NULL, lambda3 = NULL,
+                      cv_step1 = FALSE,
+                      nlam1 = 10, nlam3 = 100,
+                      lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
+                      nfold = 5, foldid = NULL, verbose = FALSE){
   n <- nrow(x)
   p <- ncol(x)
-  stopifnot(n == length(y))
 
-  # by default, the maximum value of num_keep is set to be [n / log(n)]
-  if(is.null(num_keep)){
-    num_keep = ceiling(seq(ceiling(n / log(n)), 1, length.out = n_num_keep))
-  }
-  else{
-    stopifnot(max(num_keep) <= ifelse(square, p*(p - 1) / 2, p * (p - 1)/ 2 + p))
-  }
-  n_num_keep <- length(num_keep)
+  q <- ifelse(square, p * (p - 1) / 2, p * (p - 1) / 2 + p)
+  if(is.null(num_keep))
+    num_keep <- ceiling(n / log(n))
+  else
+    stopifnot(num_keep > 0 & num_keep <= q)
 
   if(verbose)
     cat("cv initial:", fill = TRUE)
-  # first fit the sprinter using all data with all lambdas
-  fit <- sprinter(x = x, y = y, square = square, type = type,
-                  num_keep = num_keep, n_num_keep = n_num_keep,
-                  nlam = nlam, lam_min_ratio = lam_min_ratio)
 
-#  if(is.null(lambda)){
-#    # if lambda is not provided
-#    lambda <- fit$lambda
-#  }
-#  nlam <- length(lambda)
+  # first fit the sprinter using all data with all lambdas
+  fit <- sprinter(x = x, y = y,
+                  square = square, num_keep = num_keep,
+                  lambda1 = lambda1, lambda3 = lambda3,
+                  cv_step1 = cv_step1,
+                  nlam1 = nlam1, nlam3 = nlam3,
+                  lam_min_ratio = lam_min_ratio)
+
+  nlam1 <- length(fit$lambda1)
+  nlam3 <- length(fit$lambda3[, 1])
 
   # use cross-validation to select the best lambda
   if (is.null(foldid)){
@@ -87,7 +85,7 @@ cv.sprinter <- function(x, y, square = FALSE, type = 1,
 
   # mse of lasso estimate of coef
   err <- vector("list", nfold)
-  err_mat <- matrix(0, nrow = n_num_keep, ncol = nlam)
+  err_mat <- matrix(0, nrow = nlam1, ncol = nlam3)
   for (i in seq(nfold)){
     if(verbose)
       cat(paste("cv fold ", i, ":"), fill = TRUE)
@@ -106,64 +104,82 @@ cv.sprinter <- function(x, y, square = FALSE, type = 1,
 
     # get the fit using lasso on training data
     # and fit/obj on the test data
-    fit_tr <- sprinter(x = x_tr, y = y_tr,
-                       square = square, type = type,
-                       num_keep = fit$num_keep,
-                       lambda = fit$lambda, verbose = verbose)
-    err[[i]] <- matrix(NA, nrow = n_num_keep, ncol = nlam)
+    fit_tr <- sprinter(x = x_tr, y = y_tr, square = fit$square,
+                     num_keep = fit$num_keep,
+                     lambda1 = fit$lambda1,
+                     lambda3 = fit$lambda3)
+
+    err[[i]] <- matrix(NA, nrow = nlam1, ncol = nlam3)
+
     pred_te <- predict.sprinter(object = fit_tr, newdata = x_te)
-    for(k in seq(length(fit_tr$step3))){
-      err[[i]][k, ] <- sqrt(as.numeric(colMeans((y_te - pred_te[[k]]$fitted)^2)))
+
+    for(k in seq(nlam1)){
+      if(ncol(pred_te[[k]]) < nlam3){
+        # this only happens when glmnet returns a numerical warning as follows:
+        # Fortran error code; Convergence for i-th lambda value not reached after maxit=100000 iterations; solutions for larger lambdas returned
+        # when this happens, not all nlam3 lambda values in Step3 is returned
+        # we just copy the prediction from the last viable lambda values to fill in the empty slots
+        last_col <- ncol(pred_te[[k]])
+        ncol_to_add <- nlam3 - last_col
+        pred_te[[k]] <- cbind(pred_te[[k]], matrix(rep(pred_te[[k]][, last_col], ncol_to_add), ncol = ncol_to_add))
+      }
+      err[[i]][k, ] <- sqrt(as.numeric(colMeans((y_te - pred_te[[k]])^2)))
     }
     err_mat <- err_mat + err[[i]]
   }
 
   # extract information from CV
-  # the mean cross-validated error, a n_num_keep-by-nlam matrix
+  # the mean cross-validated error, a nlam1-by-nlam3 matrix
   err_mat <- err_mat / nfold
 
   # also compute the se_mat
-  se_mat <- matrix(0, nrow = n_num_keep, ncol = nlam)
+  se_mat <- matrix(0, nrow = nlam1, ncol = nlam3)
   for (i in seq(nfold)){
     se_mat <- se_mat + (err[[i]] - err_mat)^2
   }
   se_mat <- sqrt(se_mat / (nfold - 1))
 
   # the index of best lambda
+  # if there is ties
+  # we select the one with smaller lambda1 value and larger lambda 3 value
+  # i.e., we select the model with more main effects and fewer interactions
   ibest <- tail(which(err_mat == min(err_mat), arr.ind = TRUE), 1)
   colnames(ibest) <- NULL
 
-  num_keep_best <- ibest[1]
-  lam_best <- ibest[2]
-  lam_1se <- which(err_mat[num_keep_best, ] < err_mat[num_keep_best, lam_best] + se_mat[num_keep_best, lam_best])[1]
+  lambda1_best <- ibest[1]
+  lambda3_best <- ibest[2]
 
-  idx <- fit$step3[[num_keep_best]]$idx
-  coef <- fit$step3[[num_keep_best]]$coef[, lam_best]
+  #lam_1se <- tail(which(err_mat[num_keep_best, ] < err_mat[lambda1_best, lambda3_best] + se_mat[lambda1_best, lambda3_best], arr.ind = TRUE), 1)
+
+  # get a compact output
+  idx_i <- fit$step2[[lambda1_best]]
+  if(square)
+    idx <- rbind(cbind(rep(0, p), seq(p), rep(0, p)),
+                 cbind(seq(p), seq(p), rep(0, p)),
+                 idx_i)
+  else
+    idx <- rbind(cbind(rep(0, p), seq(p), rep(0, p)), idx_i)
+
+  coef <- fit$step3[[lambda1_best]]$coef[, lambda3_best]
   compact <- cbind(idx[which(coef != 0), 1:2, drop = FALSE], coef[coef != 0])
   colnames(compact) <- c("index_1", "index_2", "coefficient")
 
-  fitted <- fit$step3[[num_keep_best]]$fitted[, lam_best]
-  if(type == 2)
-    fitted <- fit$step1$fitted + fitted
+  fitted <- fit$step1$fitted[, lambda1_best] + fit$step3[[lambda1_best]]$fitted[, lambda3_best]
 
   # finally return the best lambda
   out <- list(n = n,
               p = p,
-              type = type,
               square = square,
-              step1 = fit$step1,
-              a0 = fit$step3[[num_keep_best]]$a0[lam_best],
+              a0_step3 = fit$step3[[lambda1_best]]$a0[lambda3_best],
               compact = compact,
               fit = fit,
               fitted = fitted,
-              lambda = fit$lambda,
               num_keep = num_keep,
               cvm = err_mat,
               cvse = se_mat,
               foldid = foldid,
-              num_keep_best = num_keep_best,
-              lam_best = lam_best,
-              lam_1se = lam_1se,
+              i_lambda1_best = lambda1_best,
+              i_lambda3_best = lambda3_best,
               call = match.call())
   class(out) <- "cv.sprinter"
   return(out)

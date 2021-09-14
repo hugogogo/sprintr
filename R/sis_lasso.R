@@ -43,11 +43,22 @@ sis_lasso <- function(x, y,
   }
 
   # step 2: fit cv.glment with all main effects and constructed (hierarchical) interactions
-  xx <- x[, idx[, 1]] * x[, idx[, 2]]
-   # note that we use penalty.factor to make sure that main effects are not penalized
-  fit <- cv.glmnet(x = cbind(x, xx), y = y)
+  xx <- myscale(cbind(x, x[, idx[, 1]] * x[, idx[, 2]]))
+  mean_y <- mean(y)
+
+  fit <- cv.glmnet(x = xx, y = y,
+                   lambda = get_lambda(x = xx, y = y - mean_y),
+                   intercept = FALSE,
+                   standardize = FALSE)
+
 
   coef <- fit$glmnet.fit$beta[, which.min(fit$cvm)]
+  # in-sample fitted value
+  fitted <- as.numeric(mean_y + xx %*% coef)
+  # scale estimates back to the original scale of x
+  coef <- coef / attr(xx, which = "scaled:scale")
+  a0 <- as.numeric(mean_y - crossprod(attr(xx, which = "scaled:center"), coef))
+
   idx_all <- rbind(cbind(rep(0, p), seq(p)), idx[, 1:2])
   compact <- cbind(idx_all[which(coef != 0), , drop = FALSE], coef[coef != 0])
   rownames(compact) <- NULL
@@ -56,9 +67,12 @@ sis_lasso <- function(x, y,
   # finally return the best lambda
   out <- list(n = n,
               p = p,
+              type = 1,
               fit = fit,
+              a0 = a0,
+              fitted = fitted,
               compact = compact,
               call = match.call())
-  class(out) <- "cv.hier"
+  class(out) <- "other"
   return(out)
 }

@@ -4,9 +4,16 @@
 \alias{hier_lasso}
 \title{Two-stage hierarchical lasso}
 \usage{
-hier_lasso(x, y, lambda = NULL, nlam = 100, lam_choice = "min",
-  lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04), nfold = 5,
-  foldid = NULL)
+hier_lasso(
+  x,
+  y,
+  lambda = NULL,
+  nlam = 100,
+  lam_choice = "min",
+  lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
+  nfold = 5,
+  foldid = NULL
+)
 }
 \arguments{
 \item{x}{An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.}

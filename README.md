@@ -2,7 +2,7 @@
 
 The `sprintr` package contains implementation of a computationally efficient method to fit large-scale interaction models based on a reluctant interaction selection principle.
 The details of the method can be found in 
-[Yu, Bien, and Tibshirani (2019) *Reluctant Interaction Modeling*](https://arxiv.org/abs/1907.08414).
+[Yu, Bien, and Tibshirani (2019) *Reluctant Interaction Modeling*](https://arxiv.org/abs/1907.08414), v2.
 
 To install `sprintr` from [github](http://github.com), type in R console
 ```R
@@ -16,5 +16,4 @@ Please check the accompanying vignette on how to use the `sprintr` package. To r
 browseVignettes("sprintr")
 ```
 
-The package is also [here](https://CRAN.R-project.org/package=sprintr) available in CRAN.
-You can directly see the vignette [here](https://cran.r-project.org/web/packages/sprintr/vignettes/sprintr-vignette.html).
+## Note that the sprinter method is changed in v2 of the manuscript. This package reflects this change. The method described in v1 of the manuscript is now deprecated.

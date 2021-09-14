@@ -16,20 +16,15 @@
 predict.cv.sprinter <- function(object, newdata, ...) {
   # input check
   stopifnot(ncol(newdata) == object$p)
-  # if in Step 3, the residual is fitted
-  # then in prediction, we add the prediciton in step 1
-  if(object$type == 2){
-    if(object$square){
-      x_step1 <- cbind(newdata, myscale(newdata)^2)
-    }
-    else{
-      x_step1 <- newdata
-    }
-    fitted_step1 <- as.numeric(object$step1$a0 + x_step1 %*% object$step1$beta)
+  if(object$square){
+    x_step1 <- cbind(newdata, myscale(newdata)^2)
   }
   else{
-    fitted_step1 <- rep(0, nrow(newdata))
+    x_step1 <- newdata
   }
+  # step 1 prediction
+  fitted_step1 <- as.numeric(object$fit$step1$a0[object$i_lambda1_best] + x_step1 %*% object$fit$step1$beta[, object$i_lambda1_best])
+
   idx <- object$compact[, 1:2, drop = FALSE]
   # selected indices for main effects
   idxm <- idx[idx[, 1] == 0, 2]
@@ -38,8 +33,14 @@ predict.cv.sprinter <- function(object, newdata, ...) {
 
   # need to standardize the main effects to construct interactions
   xm <- myscale(newdata)
-  xint <- xm[, idxi[, 1]] * xm[, idxi[, 2]]
 
-  fitted_step3 <- as.numeric(object$a0 + cbind(newdata[, idxm], xint) %*% object$compact[, 3])
+  if(nrow(idxi) == 1)
+    xint <- matrix(xm[, idxi[, 1]] * xm[, idxi[, 2]], ncol = 1)
+  else
+    xint <- xm[, idxi[, 1]] * xm[, idxi[, 2]]
+
+  design <- cbind(xm[, idxm], xint)
+
+  fitted_step3 <- as.numeric(object$a0_step3 + design %*% object$compact[, 3])
   return(fitted_step1 + fitted_step3)
 }

@@ -2,11 +2,20 @@
 % Please edit documentation in R/sprinter.R
 \name{sprinter}
 \alias{sprinter}
-\title{Sparse Reluctant Interaction Modeling}
+\title{Reluctant Interaction Modeling}
 \usage{
-sprinter(x, y, square = FALSE, type = 1, num_keep = NULL,
-  n_num_keep = 5, lambda = NULL, nlam = 100,
-  lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04), verbose = TRUE)
+sprinter(
+  x,
+  y,
+  square = FALSE,
+  num_keep = NULL,
+  lambda1 = NULL,
+  lambda3 = NULL,
+  cv_step1 = FALSE,
+  nlam1 = 10,
+  nlam3 = 100,
+  lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04)
+)
 }
 \arguments{
 \item{x}{An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.}
@@ -15,24 +24,23 @@ sprinter(x, y, square = FALSE, type = 1, num_keep = NULL,
 
 \item{square}{Indicator of whether squared effects should be fitted in Step 1. Default to be FALSE.}
 
-\item{type}{An indicator: if type == 1, in Step 3 we fit y on (main effects, selected interactions); if type == 2, in Step 3 we fit the residual from step 1 on only the selected interactions}
+\item{num_keep}{A user specified number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to \code{round[n / log n]}.}
 
-\item{num_keep}{A user specified list of number of candidate interactions to keep in Step 2. If \code{num_keep} is not specified (as default), it will be set to a sequence from \code{[n / log n]} to 0, where the length of the sequence is set to the default value of \code{n_num_keep}.}
+\item{lambda1}{Tuning parameter values for Step 1. \code{lambda1} is a vector. Default to be NULL, and the program will compute its own \code{lambda1} based on \code{nlam1} and \code{lam_min_ratio}.}
 
-\item{n_num_keep}{The number of \code{num_keep} values. Default to be \code{5}.}
+\item{lambda3}{Tuning parameter values for Step 3. \code{lambda3} is a matrix, where the k-th column is the list of tuning parameter in Step 3 corresponding to Step 1 using \code{lambda1[k]}. Default to be NULL, and the program will compute its own \code{lambda3} based on \code{nlam3} and \code{lam_min_ratio}.}
 
-\item{lambda}{A user specified list of tuning parameter. \code{lambda} is a list object of length \code{n_num_keep}, and an element \code{lambda[[i]]} is a vector of length \code{nlam}. Default to be NULL, and the program will compute its own \code{lambda} paths based on \code{n_num_keep}, \code{nlam} and \code{lam_min_ratio}.}
+\item{cv_step1}{Indicator of whether cross-validation of \code{lambda1} should be carried out in Step 1 before subsequent steps. Default is \code{FALSE}.}
 
-\item{nlam}{the number of values in each \code{lambda[[i]]} path. If not specified, they will be all set to \code{100}.}
+\item{nlam1}{the number of values in \code{lambda1}. If not specified, they will be all set to \code{10}.}
 
-\item{lam_min_ratio}{The ratio of the smallest and the largest values in each \code{lambda[[i]]}. The largest value in \code{lambda} is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.}
+\item{nlam3}{the number of values in each column of \code{lambda3}. If not specified, they will be all set to \code{100}.}
 
-\item{verbose}{If \code{TRUE} (default), a progress bar shows the progress of the fitting.}
+\item{lam_min_ratio}{The ratio of the smallest and the largest values in \code{lambda1} and each column of \code{lambda2}. The largest value is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.}
 }
 \value{
 An object of S3 class "\code{sprinter}".
  \describe{
-  \item{\code{type}}{The \code{type} parameter passed into sprinter}
   \item{\code{square}}{The \code{square} parameter passed into sprinter}
   \item{\code{step1}}{The output from fitting Step 1}
   \item{\code{lambda}}{The path of tuning parameters passed into / computed for fitting Step 3}

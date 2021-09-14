@@ -16,37 +16,29 @@
 predict.sprinter <- function(object, newdata, ...) {
   # input check
   stopifnot(ncol(newdata) == object$p)
-  n_num_keep <- length(object$step3)
-  fitted <- vector("list", length = n_num_keep)
-  # if in Step 3, the residual is fitted
-  # then in prediction, we add the prediciton in step 1
-  if(object$type == 2){
-    if(object$square){
-      x_step1 <- cbind(newdata, myscale(newdata)^2)
-    }
-    else{
-      x_step1 <- newdata
-    }
-    fitted_step1 <- as.numeric(object$step1$a0 + x_step1 %*% object$step1$beta)
-  }
-  else{
-    fitted_step1 <- rep(0, nrow(newdata))
-  }
-  for(i in seq(n_num_keep)){
-    obj_curr <- object$step3[[i]]
-    idx <- obj_curr$idx[, , drop = FALSE]
-    # selected indices for main effects
-    idxm <- idx[idx[, 1] == 0, 2]
-    # selected index pairs for interactions
-    idxi <- idx[idx[, 1] != 0, , drop = FALSE]
+  nlam1 <- length(object$lambda1)
 
-    # need to standardize the main effects to construct interactions
-    xm <- myscale(newdata)
-    xint <- xm[, idxi[, 1]] * xm[, idxi[, 2]]
+  out <- vector("list", length = nlam1)
 
-    fitted[[i]]$fitted <- fitted_step1 + as.matrix(cbind(newdata[, idxm], xint) %*% obj_curr$coef)
-    colnames(fitted[[i]]$fitted) <- NULL
-    fitted[[i]]$fitted <- t(obj_curr$a0 + t(fitted[[i]]$fitted))
+  if(object$square)
+    x_step1 <- cbind(newdata, myscale(newdata)^2)
+  else
+    x_step1 <- newdata
+
+  # need to standardize the main effects to construct interactions
+  xm <- myscale(newdata)
+
+  # we add the prediction in Step1 (for each lambda1 value) and in Step3 (for a path of lambda3 values)
+  for(k in seq(nlam1)){
+    fitted_step1 <- as.numeric(object$step1$a0[k] + x_step1 %*% object$step1$beta[, k])
+
+    idx <- object$step2[[k]]
+    xint <- xm[, idx[, 1]] * xm[, idx[, 2]]
+    design <- cbind(x_step1, xint)
+
+    out[[k]] <- fitted_step1 + as.matrix(design %*% object$step3[[k]]$coef)
+    colnames(out[[k]]) <- NULL
+    out[[k]] <- t(object$step3[[k]]$a0 + t(out[[k]]))
   }
-  return(fitted)
+  return(out)
 }
