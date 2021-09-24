@@ -10,7 +10,8 @@ sis_lasso(
   num_keep = NULL,
   lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
   nfold = 5,
-  foldid = NULL
+  foldid = NULL,
+  ...
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ sis_lasso(
 \item{y}{A response vector of size \code{n}.}
 
 \item{num_keep}{Number of variables to keep in the screening phase}
+
+\item{...}{other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}}
 }
 \value{
 An object of S3 class "\code{cv.hier}".

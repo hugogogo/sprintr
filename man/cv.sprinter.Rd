@@ -17,7 +17,8 @@ cv.sprinter(
   lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
   nfold = 5,
   foldid = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  ...
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ cv.sprinter(
 \item{foldid}{A vector of length \code{n} representing which fold each observation belongs to. Default to be \code{NULL}, and the program will generate its own randomly.}
 
 \item{verbose}{If \code{TRUE}, a progress bar shows the progress of the fitting.}
+
+\item{...}{other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}}
 }
 \value{
 An object of S3 class "\code{sprinter}".

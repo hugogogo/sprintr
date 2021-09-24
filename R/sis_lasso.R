@@ -4,6 +4,7 @@
 #' @param x An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.
 #' @param y A response vector of size \code{n}.
 #' @param num_keep Number of variables to keep in the screening phase
+#' @param ... other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}
 #'
 #' @return An object of S3 class "\code{cv.hier}".
 #'  \describe{
@@ -27,7 +28,7 @@
 sis_lasso <- function(x, y,
                       num_keep = NULL,
                       lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
-                      nfold = 5, foldid = NULL){
+                      nfold = 5, foldid = NULL, ...){
   n <- nrow(x)
   p <- ncol(x)
   stopifnot(n == length(y))
@@ -49,7 +50,7 @@ sis_lasso <- function(x, y,
   fit <- cv.glmnet(x = xx, y = y,
                    lambda = get_lambda(x = xx, y = y - mean_y),
                    intercept = FALSE,
-                   standardize = FALSE)
+                   standardize = FALSE, ...)
 
 
   coef <- fit$glmnet.fit$beta[, which.min(fit$cvm)]

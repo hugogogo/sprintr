@@ -11,6 +11,7 @@
 #' @param nlam1 the number of values in \code{lambda1}. If not specified, they will be all set to \code{10}.
 #' @param nlam3 the number of values in each column of \code{lambda3}. If not specified, they will be all set to \code{100}.
 #' @param lam_min_ratio The ratio of the smallest and the largest values in \code{lambda1} and each column of \code{lambda2}. The largest value is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.
+#' @param ... other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}
 #'
 #' @return An object of S3 class "\code{sprinter}".
 #'  \describe{
@@ -48,7 +49,7 @@ sprinter <- function(x, y, square = FALSE, num_keep = NULL,
                      lambda1 = NULL, lambda3 = NULL,
                      cv_step1 = FALSE,
                      nlam1 = 10, nlam3 = 100,
-                     lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04)){
+                     lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04), ...){
   n <- nrow(x)
   p <- ncol(x)
 
@@ -89,7 +90,7 @@ sprinter <- function(x, y, square = FALSE, num_keep = NULL,
     fit <- glmnet::cv.glmnet(x = x, y = y - mean_y,
                              lambda = lambda1,
                              intercept = FALSE,
-                             standardize = FALSE)
+                             standardize = FALSE, ...)
 
     # grab coefficient estimate
     theta <- matrix(fit$glmnet.fit$beta[, which.min(fit$cvm)], ncol = 1)
@@ -107,7 +108,7 @@ sprinter <- function(x, y, square = FALSE, num_keep = NULL,
     fit <- glmnet::glmnet(x = x, y = y - mean_y,
                           lambda = lambda1,
                           intercept = FALSE,
-                          standardize = FALSE)
+                          standardize = FALSE, ...)
 
     # grab coefficient estimate
     theta <- fit$beta
@@ -188,7 +189,7 @@ sprinter <- function(x, y, square = FALSE, num_keep = NULL,
     fit <- glmnet::glmnet(x = design, y = response,
                           lambda = lambda3[, k],
                           intercept = FALSE,
-                          standardize = FALSE)
+                          standardize = FALSE, ...)
     coef <- fit$beta
     colnames(coef) <- NULL
     rownames(coef) <- NULL

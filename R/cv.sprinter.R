@@ -15,6 +15,8 @@
 #' @param nfold Number of folds in cross-validation. Default value is 5. If each fold gets too view observation, a warning is thrown and the minimal \code{nfold = 3} is used.
 #' @param foldid A vector of length \code{n} representing which fold each observation belongs to. Default to be \code{NULL}, and the program will generate its own randomly.
 #' @param verbose If \code{TRUE}, a progress bar shows the progress of the fitting.
+#' @param ... other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}
+#'
 #' @return An object of S3 class "\code{sprinter}".
 #'  \describe{
 #'   \item{\code{n}}{The sample size.}
@@ -51,7 +53,7 @@ cv.sprinter <- function(x, y, square = FALSE, num_keep = NULL,
                       cv_step1 = FALSE,
                       nlam1 = 10, nlam3 = 100,
                       lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
-                      nfold = 5, foldid = NULL, verbose = FALSE){
+                      nfold = 5, foldid = NULL, verbose = FALSE, ...){
   n <- nrow(x)
   p <- ncol(x)
 
@@ -70,7 +72,7 @@ cv.sprinter <- function(x, y, square = FALSE, num_keep = NULL,
                   lambda1 = lambda1, lambda3 = lambda3,
                   cv_step1 = cv_step1,
                   nlam1 = nlam1, nlam3 = nlam3,
-                  lam_min_ratio = lam_min_ratio)
+                  lam_min_ratio = lam_min_ratio, ...)
 
   nlam1 <- length(fit$lambda1)
   nlam3 <- length(fit$lambda3[, 1])
@@ -107,7 +109,7 @@ cv.sprinter <- function(x, y, square = FALSE, num_keep = NULL,
     fit_tr <- sprinter(x = x_tr, y = y_tr, square = fit$square,
                      num_keep = fit$num_keep,
                      lambda1 = fit$lambda1,
-                     lambda3 = fit$lambda3)
+                     lambda3 = fit$lambda3, ...)
 
     err[[i]] <- matrix(NA, nrow = nlam1, ncol = nlam3)
 

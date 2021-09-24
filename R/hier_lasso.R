@@ -4,6 +4,7 @@
 #'
 #' @param x An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.
 #' @param y A response vector of size \code{n}.
+#' @param ... other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}
 #'
 #' @return An object of S3 class "\code{cv.hier}".
 #'  \describe{
@@ -28,7 +29,7 @@ hier_lasso <- function(x, y,
                        lambda = NULL, nlam = 100,
                        lam_choice = "min",
                        lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
-                       nfold = 5, foldid = NULL){
+                       nfold = 5, foldid = NULL, ...){
   n <- nrow(x)
   p <- ncol(x)
   stopifnot(n == length(y))
@@ -36,7 +37,7 @@ hier_lasso <- function(x, y,
 
   x <- myscale(x)
   # first fit the sprinter using all data with all lambdas
-  fit <- cv.glmnet(x = x, y = y, standardize = FALSE)
+  fit <- cv.glmnet(x = x, y = y, standardize = FALSE, ...)
 
   # construct all pairs interactions from selected main effects by CV-lasso
   if (lam_choice == "min"){
@@ -57,7 +58,7 @@ hier_lasso <- function(x, y,
     # step 2: fit cv.glmnet with all main effects and constructed (hierarchical) interactions
     xx <- x[, int_idx[, 1]] * x[, int_idx[, 2]]
     # note that we use penalty.factor to make sure that main effects are not penalized
-    fit <- cv.glmnet(x = cbind(x[, main_idx], xx), y = y, penalty.factor = c(rep(0, length(main_idx)), rep(1, nrow(int_idx))), standardize = FALSE)
+    fit <- cv.glmnet(x = cbind(x[, main_idx], xx), y = y, penalty.factor = c(rep(0, length(main_idx)), rep(1, nrow(int_idx))), standardize = FALSE, ...)
 
     coef <- fit$glmnet.fit$beta[, which.min(fit$cvm)]
     a0 <- fit$glmnet.fit$a0[which.min(fit$cvm)]

@@ -14,7 +14,8 @@ sprinter(
   cv_step1 = FALSE,
   nlam1 = 10,
   nlam3 = 100,
-  lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04)
+  lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
+  ...
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ sprinter(
 \item{nlam3}{the number of values in each column of \code{lambda3}. If not specified, they will be all set to \code{100}.}
 
 \item{lam_min_ratio}{The ratio of the smallest and the largest values in \code{lambda1} and each column of \code{lambda2}. The largest value is usually the smallest value for which all coefficients are set to zero. Default to be \code{1e-2} in the \code{n} < \code{p} setting.}
+
+\item{...}{other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}}
 }
 \value{
 An object of S3 class "\code{sprinter}".

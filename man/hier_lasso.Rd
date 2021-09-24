@@ -12,13 +12,16 @@ hier_lasso(
   lam_choice = "min",
   lam_min_ratio = ifelse(nrow(x) < ncol(x), 0.01, 1e-04),
   nfold = 5,
-  foldid = NULL
+  foldid = NULL,
+  ...
 )
 }
 \arguments{
 \item{x}{An \code{n} by \code{p} design matrix of main effects. Each row is an observation of \code{p} main effects.}
 
 \item{y}{A response vector of size \code{n}.}
+
+\item{...}{other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}}
 }
 \value{
 An object of S3 class "\code{cv.hier}".
