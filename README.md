@@ -11,9 +11,4 @@ devtools::install_github("hugogogo/sprintr", build_vignettes = TRUE)
 Note that the installation above requires using R package [devtools](https://CRAN.R-project.org/package=devtools)
 (which can be installed using `install.packages("devtools")`).
 
-Please check the accompanying vignette on how to use the `sprintr` package. To read vignette, after installing the package, type in R console
-```R
-browseVignettes("sprintr")
-```
-
 ## Note that the sprinter method is changed in v2 of the manuscript. This package reflects this change. The method described in v1 of the manuscript is now deprecated.
