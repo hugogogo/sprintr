@@ -1,6 +1,7 @@
 ---
 title: "Using the sprintr package"
 output: rmarkdown::html_vignette
+#output: pdf_document
 author: "Guo Yu"
 vignette: >
   %\VignetteIndexEntry{using_sprintr}
