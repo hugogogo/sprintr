@@ -45,12 +45,14 @@ sprinter(
 An object of S3 class "\code{sprinter}".
  \describe{
   \item{\code{square}}{The \code{square} parameter passed into sprinter}
+  \item{\code{n}}{The number of observations in the dataset}
+  \item{\code{p}}{The number of main effects}
   \item{\code{step1}}{The output from fitting Step 1}
-  \item{\code{lambda}}{The path of tuning parameters passed into / computed for fitting Step 3}
+  \item{\code{lambda1}}{The path of tuning parameters passed into / computed for fitting Step 1}
+  \item{\code{step2}}{The output from the screening Step 2}
   \item{\code{num_keep}}{The path of tuning parameters for Step 2}
-  \item{\code{n}}{The sample size.}
-  \item{\code{p}}{The number of main effects.}
   \item{\code{step3}}{The output from fitting Step 3}
+  \item{\code{lambda3}}{The path of tuning parameters passed into / computed for fitting Step 3}
   \item{\code{call}}{Function call.}
  }
 }

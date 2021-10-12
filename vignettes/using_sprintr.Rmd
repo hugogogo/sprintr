@@ -1,0 +1,129 @@
+---
+title: "Using the sprintr package"
+output: rmarkdown::html_vignette
+author: "Guo Yu"
+vignette: >
+  %\VignetteIndexEntry{using_sprintr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(sprintr)
+```
+
+The `sprintr` package contains the implementations of a computationally efficient method, called sprinter, to fit large interaction models based on the reluctant interaction selection principle. The details of the method can be found in [Yu, Bien, and Tibshirani (2021) *Reluctant interaction modeling*](https://arxiv.org/abs/1907.08414).
+In particular, `sprinter` is a multi-stage method that fits the following pairwise interaction model:
+$$
+y = \sum_{j = 1}^p X_j \beta^\ast_j + \sum_{\ell \leq k} X_{\ell} X_k \gamma^\ast_{\ell k} + \varepsilon.
+$$
+This document serves as an introduction of using the package with a simple simulated data example.
+
+## Data simulation
+We consider the following simple simulation setting, where $X \sim N(\mathbf{0}, \mathbf{I}_p)$. There are two non-trivial main effects $\beta_1 = 1$, $\beta_2 = -2$, and $\beta_j = 0$ for $j > 2$. The two important interactions are $X_1 * X_3$ with $\gamma_{13} = 3$, and $X_4 * X_5$ with $\gamma_{45} = -4$. With $\varepsilon \sim N(0, 1)$, the following code simulates $n = 100$ observation from the model above with $p = 100$.
+```{r}
+library(sprintr)
+set.seed(123)
+n <- 100
+p <- 100
+x <- matrix(data = rnorm(n * p), nrow = n, ncol = p)
+y <- x[, 1] - 2 * x[, 2] + 3 * x[, 1] * x[, 3] - 4 * x[, 4] * x[, 5] + rnorm(100)
+```
+
+
+# Using `sprinter` function
+The function `sprinter` implements the sprinter method (please note that the function name `sprinter` is different from the package name `sprintr`), which involves the following three main steps:
+
+- Fit a lasso (over a path of $\lambda_1$ values) of the response $y$ only on main effects $X$ (if `square = FALSE` by default) or with both main effects and squared effects $(X, X^2)$ (if `square = TRUE`). Denote the residual as $r_{\lambda_1}$.
+- Carry out a screening procedure based on the residual from the previous step. The number of the selected candidate interactions can be specified by a path of `num_keep` values.
+- With a path of tuning parameter $\lambda_2$ values, fit a lasso of the residual $r_{\lambda_1}$ on main effects, squared effects (if `square = TRUE`), and selected interactions from the previous step. 
+
+There are three tuning parameters: `lambda1` (used in Step 1), `num_keep` (used in Step 2) and `lambda3` (used in Step 3). The default value of `num_keep` is $n / \lceil \log n \rceil$ (see, e.g., [Fan & Lv (2008)](https://orfe.princeton.edu/~jqfan/papers/06/SIS.pdf)). 
+If `lambda1` is not specified, then `sprinter` would compute its own path of tuning parameter values based on the number of tuning parameters `nlam1` (default to be 10), `nlam3`(default to be 100), and the range of the path (`lam_min_ratio`).
+
+Finally, a `verbose` option (default to be `TRUE`) can be turned on to see the progress of the computation.
+```{r}
+fit <- sprinter(x = x, y = y, square = FALSE)
+```
+
+## `sprinter` output
+The output of `sprinter` is a `S3` object including several useful components. The major components are `step1`, `step2`, and `step3`. `step1` includes the `glmnet` fit with tuning `lambda1`. The component `step 2` is a list of length `nlam1`, with `step2[[j]]` containing information about the selected interactions in Step 2 with the residual from Step 1 with tuning parameter `lambda1[j]`. The component `lambda1` is the path of tuning parameters used in Step 1. And `lambda3` is a matrix, with `lambda3[, j]` representing the path of tuning parameters used in Step 3 when Step 1 uses `lambda1[j]` as the tuning parameter.
+
+```{r}
+fit$step2[[1]]
+```
+In particular, each element of `step2` contains the indices of all the selected interactions, and the last column represents the corresponding scores used for selection in Step 2. 
+
+The component `step3` is a list of length `nlam1`, with `step3[[j]]` containing information from Step 3 fit when the tuning parameter in Step 1 is `lambda1[j]`.
+Specifically, the output `fit3[[j]]$coef` is a `nrow(fit$step2[[j]]) + p`-by-`length(fit$lambda3)` matrix.
+Each column of `fit3[[j]]$coef` is a vector of estimates of all variable coefficients (`p` main effects + `nrow(fit$step2[[j]]` selected interactions) considered in Step 3 corresponding to the glmnet fit with one tuning parameter in `lambda3[, j]`. For example, for the 4-th tuning parameter in Step 1 and the 30-th tuning parameter of Step 3, we have the corresponding coefficient estimate:
+```{r}
+estimate <- fit$step3[[4]]$coef[, 30]
+```
+
+## Cross-validating Step 1 before subsequent steps
+To facilitate efficient computation, we provide the option to conduct cross-validation in Step 1 before proceeding to Step 2 and Step 3 as described in Section 3.1 in the paper. This functionality can be turned on using `cv_step1 = TRUE` argument:
+```{r}
+fit_cvstep1 <- sprinter(x = x, y = y, square = FALSE, cv_step1 = TRUE)
+```
+The output remains in the same format, with the only difference that only the result corresponding to the CV-selected value in Step 1 is reported.
+
+## Summarizing `sprinter` output by `print`  and `plot`
+The output of `sprinter` has an associated `print` function, that prints information (the number of nonzero main effects and nonzero interactions) of Step 3 fits along a path (column) of `lambda3`, for a given value of Step 1 tuning parameter (specified by `which`). For example, the following codes prints the output when the 2nd value of Step-1 tuning parameter is used:
+```{r}
+print(fit, which = 2)
+```
+
+Furthermore, `plot` function shows the dependence of coefficient estimates for each main effects (left panel) and interactions(right panel) on the Step-3 tuning parameters for a particular value of `lambda1` (specified by `which`):
+```{r fig.width = 8, fig.height = 6}
+plot(fit, which = 3)
+```
+
+# Using cross-validation with `cv.sprinter`
+The function `cv.sprinter()` performs a 2-dimensional cross-validation to select the best value pair of `lambda1` (if `cv_step1 == FALSE`) and `lambda3`. If `cv_step1 == TRUE`, then `cv.sprinter()` only performs a 1-dimensional CV to select best value of `lambda3` when Step 1 uses the CV selected `lambda1`.
+```{r }
+fit_cv <- cv.sprinter(x = x, y = y, square = FALSE)
+```
+
+## `cv.sprinter` output
+The output of `cv.sprinter` is a `S3` object. Please refer to the help document for more detailed description of the output components. 
+The most interesting information is `fit_cv$compact`, which is a matrix of three columns.
+The first two columns show the indices pairs of all variables finally selected by cross-validation, and the last column is the coefficient estimate corresponding to those selected variables.
+```{r}
+fit_cv$compact
+```
+We see (from the first two rows and the last two rows) that the fit selected by cross-validation includes all the four important variables ($X_1, X_2, X_4*X_5, X_1 * X_3$) in the model, with relatively accurate estimates of their coefficients.
+
+## Summarizing `cv.sprinter` output by `print` and `plot`
+Associated with the output of `cv.sprinter` are the `print` and `plot` functions. `print` functions can be used to the summary of the cross-validation process, indicating information such as the best number of candidate interactions in Step 2, and the validation error mean/standard errors, number of non-zero main effects/interactions for the Step-3 tuning parameter selected by `min` rule and `1se` rule.
+```{r}
+print(fit_cv)
+```
+
+The `plot` function for the output of `cv.sprinter` shows the validation error across different folds as a function of Step-3 tuning parameters (for a fixed value of Step-1 tuning parameter chosen by cross-validation). The top of the plot shows the number of nonzero main effects / nonzero interactions corresponding (in orange) to a value of Step-3 tuning parameters.
+```{r fig.height=6, fig.width = 8}
+plot(fit_cv)
+```
+The blue vertical line shows the Step-3 tuning parameter selected by CV that minimizes `cvm`.
+
+# Prediction
+The `predict` function is defined for both the object returned by `sprinter` and `cv.sprinter` that computes the prediction for a new data matrix of main effects:
+```{r}
+newdata <- matrix(rnorm(20 * p), nrow = 20, ncol = p)
+pred <- predict(fit, newdata = newdata)
+```
+The prediction for `sprinter` object computes the prediction at `newdata` for all the (Step-1, Step-3) tuning parameter pairs, and the prediction for `cv.sprinter` object just computes the prediction at `newdata` for the best tuning parameter pairs selected by cross-validation.
+```{r}
+pred_cv <- predict(fit_cv, newdata = newdata)
+```
+
+# Update
+## Additional support for `glmnet` function
+We allow additional arguments to be passed to `glmnet` call in `sprinter` and `cv.sprinter` by using the `...` argument. 

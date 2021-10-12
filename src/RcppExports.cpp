@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // screen_cpp
 arma::mat screen_cpp(const arma::mat& x, const arma::vec& y, const int num_keep, const bool square, const bool main_effect);
 RcppExport SEXP _sprintr_screen_cpp(SEXP xSEXP, SEXP ySEXP, SEXP num_keepSEXP, SEXP squareSEXP, SEXP main_effectSEXP) {

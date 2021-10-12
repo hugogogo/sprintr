@@ -5,3 +5,6 @@
 src/*.o
 src/*.so
 .DS_Store
+inst/doc
+/doc/
+/Meta/

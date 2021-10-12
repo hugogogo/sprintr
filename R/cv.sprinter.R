@@ -17,24 +17,24 @@
 #' @param verbose If \code{TRUE}, a progress bar shows the progress of the fitting.
 #' @param ... other arguments to be passed to the \code{glmnet} calls, such as \code{alpha} or \code{penalty.factor}
 #'
+
 #' @return An object of S3 class "\code{sprinter}".
 #'  \describe{
 #'   \item{\code{n}}{The sample size.}
 #'   \item{\code{p}}{The number of main effects.}
-#'   \item{\code{type}}{The \code{type} parameter passed into sprinter}
-#'   \item{\code{square}}{The \code{square} parameter passed into sprinter}
-#'   \item{\code{step1}}{The output from fitting Step 1}
-#'   \item{\code{a0}}{estimate of intercept corresponding to the CV-selected model.}
+#'   \item{\code{square}}{The \code{square} parameter passed into sprinter.}
+#'   \item{\code{a0_step3}}{Estimate of intercept corresponding to the CV-selected model.}
 #'   \item{\code{compact}}{A compact representation of the selected variables. \code{compact} has three columns, with the first two columns representing the indices of a selected variable (main effects with first index = 0), and the last column representing the estimate of coefficients.}
-#'   \item{\code{fit}}{The whole \code{glmnet} fit object in Step 3.}
+#'   \item{\code{fit}}{The whole \code{glmnet} fit object.}
 #'   \item{\code{fitted}}{fitted value of response corresponding to the CV-selected model.}
-#'   \item{\code{lambda}}{The sequence of \code{lambda} values used.}
+#'   \item{\code{num_keep}}{The value of \code{num_keep}.}
 #'   \item{\code{cvm}}{The averaged estimated prediction error on the test sets over K folds.}
 #'   \item{\code{cvse}}{The standard error of the estimated prediction error on the test sets over K folds.}
 #'   \item{\code{foldid}}{Fold assignment. A vector of length \code{n}.}
-#'   \item{\code{num_keep_best}}{The index in \code{num_keep} that is chosen by CV.}
-#'   \item{\code{lam_best}}{The index in \code{lambda} that is chosen by CV by minimizing cvm.}
-#'   \item{\code{lam_1se}}{The index in \code{lambda} that is chosen by CV using 1se rule.}
+#'   \item{\code{i_lambda1_best}}{The index in \code{lambda1} that is chosen by CV by minimizing cvm.}
+#'   \item{\code{i_lambda3_best}}{The index in \code{lambda3} that is chosen by CV by minimizing cvm.}
+#'   \item{\code{lambda1_best}}{The value of \code{lambda1} that is chosen by CV by minimizing cvm.}
+#'   \item{\code{lambda3_best}}{The value of \code{lambda3} that is chosen by CV by minimizing cvm.}
 #'   \item{\code{call}}{Function call.}
 #'  }
 #' @seealso
@@ -182,6 +182,8 @@ cv.sprinter <- function(x, y, square = FALSE, num_keep = NULL,
               foldid = foldid,
               i_lambda1_best = lambda1_best,
               i_lambda3_best = lambda3_best,
+              lambda1_best = fit$lambda1[lambda1_best],
+              lambda3_best = fit$lambda3[lambda3_best, lambda1_best],
               call = match.call())
   class(out) <- "cv.sprinter"
   return(out)
