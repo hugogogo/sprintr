@@ -24,6 +24,8 @@
 #'   \item{\code{num_keep}}{The path of tuning parameters for Step 2}
 #'   \item{\code{step3}}{The output from fitting Step 3}
 #'   \item{\code{lambda3}}{The path of tuning parameters passed into / computed for fitting Step 3}
+#'   \item{\code{main_center}}{Column centers of the input main effects}
+#'   \item{\code{main_scale}}{Column scales of the input main effects}
 #'   \item{\code{call}}{Function call.}
 #'  }
 #' @seealso
@@ -210,6 +212,7 @@ sprinter <- function(x, y, square = FALSE, num_keep = NULL,
                  step1 = step1, lambda1 = lambda1,
                  step2 = step2, num_keep = num_keep,
                  step3 = step3, lambda3 = lambda3,
+                 main_center = col_mean, main_scale = col_sd,
                  call = match.call())
   class(result) <- "sprinter"
   return(result)

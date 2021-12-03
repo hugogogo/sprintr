@@ -16,11 +16,15 @@
 predict.cv.sprinter <- function(object, newdata, ...) {
   # input check
   stopifnot(ncol(newdata) == object$p)
+
+  # need to standardize the main effects to construct interactions
+  xm <- myscale(newdata, center = object$fit$main_center, scale = object$fit$main_scale)
+
   if(object$square){
-    x_step1 <- cbind(newdata, myscale(newdata)^2)
+    x_step1 <- cbind(xm, xm^2)
   }
   else{
-    x_step1 <- newdata
+    x_step1 <- xm
   }
   # step 1 prediction
   fitted_step1 <- as.numeric(object$fit$step1$a0[object$i_lambda1_best] + x_step1 %*% object$fit$step1$beta[, object$i_lambda1_best])
@@ -30,9 +34,6 @@ predict.cv.sprinter <- function(object, newdata, ...) {
   idxm <- idx[idx[, 1] == 0, 2]
   # selected index pairs for interactions
   idxi <- idx[idx[, 1] != 0, , drop = FALSE]
-
-  # need to standardize the main effects to construct interactions
-  xm <- myscale(newdata)
 
   if(nrow(idxi) == 1)
     xint <- matrix(xm[, idxi[, 1]] * xm[, idxi[, 2]], ncol = 1)

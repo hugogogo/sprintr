@@ -20,13 +20,14 @@ predict.sprinter <- function(object, newdata, ...) {
 
   out <- vector("list", length = nlam1)
 
-  if(object$square)
-    x_step1 <- cbind(newdata, myscale(newdata)^2)
-  else
-    x_step1 <- newdata
-
   # need to standardize the main effects to construct interactions
-  xm <- myscale(newdata)
+  xm <- myscale(newdata, center = object$main_center, scale = object$main_scale)
+
+  if(object$square)
+    x_step1 <- cbind(xm, xm^2)
+  else
+    x_step1 <- xm
+
 
   # we add the prediction in Step1 (for each lambda1 value) and in Step3 (for a path of lambda3 values)
   for(k in seq(nlam1)){

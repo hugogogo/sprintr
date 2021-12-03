@@ -53,6 +53,8 @@ An object of S3 class "\code{sprinter}".
   \item{\code{num_keep}}{The path of tuning parameters for Step 2}
   \item{\code{step3}}{The output from fitting Step 3}
   \item{\code{lambda3}}{The path of tuning parameters passed into / computed for fitting Step 3}
+  \item{\code{main_center}}{Column centers of the input main effects}
+  \item{\code{main_scale}}{Column scales of the input main effects}
   \item{\code{call}}{Function call.}
  }
 }
